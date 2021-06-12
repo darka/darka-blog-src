@@ -1,4 +1,4 @@
 baseURL = "https://darka.github.io/blog"
 languageCode = "en-us"
 title = "Tech Blog"
-theme = "ronu-hugo-theme"
+theme = "mini"
