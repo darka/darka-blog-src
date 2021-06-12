@@ -1,4 +1,4 @@
-baseURL = "https://darka.github.io/blog"
+baseURL = "https://darka.github.io"
 languageCode = "en-us"
 title = "Tech Blog"
 theme = "mini"
