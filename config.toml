@@ -2,3 +2,5 @@ baseURL = "https://darka.github.io"
 languageCode = "en-us"
 title = "Tech Blog"
 theme = "mini"
+pygmentsUseClasses = false
+pygmentsStyle = "friendly"
