@@ -3,9 +3,9 @@ title: "3SUM in Rust"
 description: "Solving the famous 3SUM problem in Rust"
 date: 2021-06-10T21:44:00Z
 draft: false
+summary: A solution to the well known 3SUM problem written in Rust with O(n²) running time
+tags: ["algorithms", "rust"]
 ---
-
-# 3SUM in Rust
 
 3SUM is a famous problem in computer science, and often comes up in Software Engineering interview questions of the leetcode variety. Here we will present a simple solution in Rust.
 
