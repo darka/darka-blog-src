@@ -4,3 +4,7 @@ title = "Darius' Code Tinkerings"
 theme = "mini"
 pygmentsUseClasses = false
 pygmentsStyle = "friendly"
+googleAnalytics = "UA-199920153-1"
+
+[params]
+enableGoogleAnalytics = true
