@@ -5,6 +5,8 @@ theme = "mini"
 pygmentsUseClasses = false
 pygmentsStyle = "friendly"
 googleAnalytics = "UA-199920153-1"
+disqusShortname = "darius-code-tinkerings"
 
 [params]
 enableGoogleAnalytics = true
+enableComments = true
