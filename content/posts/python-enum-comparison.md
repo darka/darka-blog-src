@@ -36,7 +36,7 @@ False
 True
 {{< /highlight >}}
 
-This is because enum members are compared by identity, so only the value matters, and hence `SQUIRREL` and `OPOSSUM` evaluate as equal.
+Enum members are compared by identity, so only the value matters, and hence `SQUIRREL` and `OPOSSUM` evaluate as equal.
 
 # Comparisons
 
@@ -69,7 +69,7 @@ True
 True
 {{< /highlight >}}
 
-As the values of the enumeration members are the same, the members themselves evaluate as equal!
+As the values of enumeration members are the same, the members themselves evaluate as equal!
 
 > __Note:__ We can disallow defining enumerations with duplicate values by using [the `@unique` decorator][unique-decorator]
 
@@ -113,7 +113,7 @@ Python supports adding extra attributes to an enumeration by [overriding the `__
 >>> class MyEnum(Enum):
 ...    FOO = 1, 'a'
 ...    BAR = 2, 'b'
-...    BAZ = 2, 'c'
+...    BAZ = 3, 'b'
 ...
 ...    def __new__(cls, value, extra):
 ...        obj = object.__new__(cls)
@@ -131,23 +131,23 @@ We can then access the new attribute on any member:
 'a'
 {{< /highlight >}}
 
-However, these extra attributes are not used in enum member comparisons:
+This allows distinct enum members to share the same attribute value.
 
 {{< highlight python >}}
 >>> MyEnum.BAR.extra == MyEnum.BAZ.extra
-False
+True
 >>> MyEnum.BAR.value == MyEnum.BAZ.value
-True
+False
 >>> MyEnum.BAR == MyEnum.BAZ
-True
+False
 {{< /highlight >}}
 
-If we combine this behaviour with `auto()`, we can store a mapping inside an enumeration with members sharing the same value, but also ensure
+Hence, we can now store a mapping inside an enumeration with members sharing the same attribute value, but also ensure
 they do not evaluate as equal.
 
 # Fixing the Example
 
-We start by defining our `AnimalClass` enumeration again:
+We start by defining our `AnimalClass` enumeration again (this time using `auto()`):
 {{< highlight python >}}
 >>> class AnimalClass(Enum):
 ...    MAMMAL = auto()
@@ -177,6 +177,14 @@ False
 >>> Animal.SQUIRREL.animal_class == Animal.OPOSSUM.animal_class
 True
 {{< /highlight >}}
+
+# Disclaimer
+
+Although the enumeration now behaves how we want, the readability of the code has been significantly reduced. Someone who is not familiar with all of these
+enumeration tricks will find it difficult to decipher what the fixed example does, and will likely be inclined to convert it to a
+simple enum, potentially introducing bugs in the process.
+
+Caution must be taken when introducing a complicated piece of code to a codebase.
 
 [unique-decorator]: https://docs.python.org/3/library/enum.html#enum.unique
 [custom-new]: https://docs.python.org/3/library/enum.html#using-a-custom-new
