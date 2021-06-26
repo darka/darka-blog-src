@@ -1,7 +1,7 @@
 ---
 title: "Python Enumeration Comparisons"
 description: "Working around somewhat unintuitive Enum comparison behaviour in Python"
-date: 2021-06-25T12:30:00Z
+date: 2021-06-26T12:30:00Z
 draft: false
 summary: Working around somewhat unintuitive Enum comparison behaviour in Python
 tags: ["python"]
