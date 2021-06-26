@@ -28,7 +28,7 @@ We then define our animal enum:
 ...    OPOSSUM = AnimalClass.MAMMAL
 {{< /highlight >}}
 
-However, if we try to compare mebers of the `Animal` enum, the behaviour may be somewhat unintuitive:
+However, if we try to compare members of the `Animal` enum, the behaviour may be somewhat unintuitive:
 {{< highlight python >}}
 >>> Animal.MAGPIE == Animal.OPOSSUM
 False
@@ -40,7 +40,7 @@ Enum members are compared by identity, so only the value matters, and hence `SQU
 
 # Comparisons
 
-Let's examine the enum comparison behaviour further by taking a very simple example:
+Let's examine the enum comparison behaviour further by taking another simple example:
 
 {{< highlight python >}}
 >>> class MyEnum(Enum):
@@ -84,7 +84,7 @@ False
 
 Although we can compare the values directly, comparing members and their values evaluates to `False`.
 
-To avoid issues with comparisons, a simple solution is to use automatic values:
+One way to avoid issues with comparisons, is to use automatic values:
 
 {{< highlight python >}}
 >>> from enum import Enum, auto
@@ -99,7 +99,7 @@ False
 False
 {{< /highlight >}}
 
-This works, but it means we can no longer store anything useful as an enumeration member value.
+This ensures all values are different, but means we can no longer store anything useful as a value.
 In some cases (as in the original example) we may want to keep the values around rather than replace them with `auto()`.
 If some of the values are the same, the equality behaviour described above may not be what we want.
 
@@ -169,7 +169,7 @@ We then define our `Animal` enum, but this time we override `__new__` and store 
 ...     OPOSSUM = (auto(), AnimalClass.MAMMAL)
 {{< /highlight >}}
 
-This gives us the behaviour we want, where the enumberation members do not evaluate as equal, although the animal class they belong to is the same:
+This gives us the behaviour we want, where the enumeration members do not evaluate as equal, although the animal class they belong to is the same:
 
 {{< highlight python >}}
 >>> Animal.SQUIRREL == Animal.OPOSSUM
@@ -180,7 +180,7 @@ True
 
 # Disclaimer
 
-Although the enumeration now behaves how we want, the readability of the code has been significantly reduced. Someone who is not familiar with all of these
+Although the enumeration now behaves how we want, the readability of the code has been significantly reduced. Someone who is not familiar with these
 enumeration tricks will find it difficult to decipher what the fixed example does, and will likely be inclined to convert it to a
 simple enum, potentially introducing bugs in the process.
 
