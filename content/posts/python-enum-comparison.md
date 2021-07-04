@@ -1,15 +1,15 @@
 ---
-title: "Python Enumeration Comparisons"
-description: "Working around somewhat unintuitive Enum comparison behaviour in Python"
+title: "Python Enumeration Aliases"
+description: "Working around somewhat unintuitive Enum member aliasing behaviour in Python"
 date: 2021-06-26T12:30:00Z
 draft: false
-summary: Working around somewhat unintuitive Enum comparison behaviour in Python
+summary: Working around somewhat unintuitive Enum member aliasing behaviour in Python
 tags: ["python"]
 ---
 
 # Example
 
-Imagine we need to store a mapping between animals and their corresponding animal classes inside an enumeration.
+Imagine we would like to store a mapping between animals and their corresponding animal classes inside an enumeration.
 We start by defining an animal class enum:
 
 {{< highlight python >}}
@@ -30,13 +30,13 @@ We then define our animal enum:
 
 However, if we try to compare members of the `Animal` enum, the behaviour may be somewhat unintuitive:
 {{< highlight python >}}
->>> Animal.MAGPIE == Animal.OPOSSUM
+>>> Animal.MAGPIE is Animal.OPOSSUM
 False
->>> Animal.SQUIRREL == Animal.OPOSSUM
+>>> Animal.SQUIRREL is Animal.OPOSSUM
 True
 {{< /highlight >}}
 
-Enum members are compared by identity, so only the value matters, and hence `SQUIRREL` and `OPOSSUM` evaluate as equal.
+Enum members are compared by identity, and as both `SQUIRREL` and `OPOSSUM` have the same value, they evaluate as equal.
 
 # Comparisons
 
@@ -49,11 +49,11 @@ Let's examine the enum comparison behaviour further by taking another simple exa
 ...
 >>> MyEnum.FOO.value == MyEnum.BAR.value
 False
->>> MyEnum.FOO == MyEnum.BAR
+>>> MyEnum.FOO is MyEnum.BAR
 False
 {{< /highlight >}}
 
-So far so good. The values are different, hence comparison between members with different values evaluates to `False`.
+So far so good. The values are different, hence identity comparison between members with different values evaluates to `False`.
 
 Let's add another member to the enumeration, but give it the same value:
 
@@ -65,11 +65,19 @@ Let's add another member to the enumeration, but give it the same value:
 ...
 >>> MyEnum.BAR.value == MyEnum.BAZ.value
 True
->>> MyEnum.BAR == MyEnum.BAZ
+>>> MyEnum.BAR is MyEnum.BAZ
 True
 {{< /highlight >}}
 
-As the values of enumeration members are the same, the members themselves evaluate as equal!
+As the values of the enumeration members are the same, the members themselves evaluate as equal! The `BAZ` member is internally
+considered an alias of `BAZ`.
+
+In fact, if we try to convert the enumeration to a list, `BAZ` is not present in the result:
+
+{{< highlight python >}}
+>>> list(MyEnum)
+[<MyEnum.FOO: 1>, <MyEnum.BAR: 2>]
+{{< /highlight >}}
 
 > __Note:__ We can disallow defining enumerations with duplicate values by using [the `@unique` decorator][unique-decorator]
 
@@ -78,6 +86,8 @@ What about comparing enumeration members with their own values?
 {{< highlight python >}}
 >>> MyEnum.BAR.value == 2
 True
+>>> MyEnum.BAR is 2
+False
 >>> MyEnum.BAR == 2
 False
 {{< /highlight >}}
@@ -95,13 +105,13 @@ One way to avoid issues with comparisons, is to use automatic values:
 ...
 >>> MyEnum.BAR.value == MyEnum.BAZ.value
 False
->>> MyEnum.BAR == MyEnum.BAZ
+>>> MyEnum.BAR is MyEnum.BAZ
 False
 {{< /highlight >}}
 
 This ensures all values are different, but means we can no longer store anything useful as a value.
 In some cases (as in the original example) we may want to keep the values around rather than replace them with `auto()`.
-If some of the values are the same, the equality behaviour described above may not be what we want.
+If some of the values are the same, the identity comparison behaviour described above may not be what we want.
 
 There is a way to work around this by storing the value as extra attribute on an enumeration.
 
@@ -138,6 +148,8 @@ This allows distinct enum members to share the same attribute value.
 True
 >>> MyEnum.BAR.value == MyEnum.BAZ.value
 False
+>>> MyEnum.BAR is MyEnum.BAZ
+False
 >>> MyEnum.BAR == MyEnum.BAZ
 False
 {{< /highlight >}}
@@ -172,7 +184,7 @@ We then define our `Animal` enum, but this time we override `__new__` and store 
 This gives us the behaviour we want, where the enumeration members do not evaluate as equal, although the animal class they belong to is the same:
 
 {{< highlight python >}}
->>> Animal.SQUIRREL == Animal.OPOSSUM
+>>> Animal.SQUIRREL is Animal.OPOSSUM
 False
 >>> Animal.SQUIRREL.animal_class == Animal.OPOSSUM.animal_class
 True
