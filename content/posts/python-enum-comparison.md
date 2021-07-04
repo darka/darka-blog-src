@@ -198,5 +198,10 @@ simple enum, potentially introducing bugs in the process.
 
 Caution must be taken when introducing a complicated piece of code to a codebase.
 
+# Another Approach
+
+The hacks above can be avoided by using the [`aenum` library][aenum] and adding a `NoAlias` flag to your enumerations.
+
 [unique-decorator]: https://docs.python.org/3/library/enum.html#enum.unique
 [custom-new]: https://docs.python.org/3/library/enum.html#using-a-custom-new
+[aenum]: https://pypi.org/project/aenum/
