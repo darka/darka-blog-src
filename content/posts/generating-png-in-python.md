@@ -11,7 +11,7 @@ tags: ["python"]
 
 PNG is the most common lossless image format on the web. As I am fascinated by the most mundane building blocks of the web,
 I thought it would be interesting to go through a demonstration of how to generate a PNG image file from scratch in Python.
-We will only be covering the very basics to get some output out, and as the format is simple, we have no need to use anything
+I will only be covering the very basics to get some output, and as the format is simple, there is no need to use anything
 but the standard Python library.
 
 # Image Representation
@@ -198,7 +198,7 @@ def make_idat(image: Image) -> bytes:
 
 Note that PNG files can have multiple IDAT chunks, but for demonstration purposes we will only write one.
 
-# Writing the PNG
+# PNG Output
 
 Let's put all of this together and write a function to output the whole PNG image.
 We will start out by outputting the PNG header:
@@ -256,6 +256,8 @@ save_png(image, 'out.png')
 {{< /highlight >}}
 
 Here is our finished PNG image:
+
+![Output image](/img/out.png)
 
 # References
 
