@@ -11,7 +11,8 @@ tags: ["python"]
 
 PNG is the most common lossless image format on the web. As I am fascinated by the most mundane building blocks of the web,
 I thought it would be interesting to go through a demonstration of how to generate a PNG image file from scratch in Python.
-I will only be covering the very basics to get some output, and as the format is simple, there is no need to use anything
+
+I will be covering only the very basics on how to produce some output, and as the format is simple, there is no need to use anything
 but the standard Python library.
 
 # Image Representation
@@ -63,7 +64,7 @@ def generate_checkerboard_pattern(width: int, height: int) -> Image:
     return out
 {{< /highlight >}}
 
-Note: as the checkerboard pattern consists of just two colours, we don't need the RGB values, we could've stored this as a greyscale image and
+> __Note:__ As the checkerboard pattern consists of just two colours, we don't need all of the RGB values. We could've stored this as a greyscale image and
 saved some space, or as an indexed-colour image with a palette and saved even more space. However, as most images on the web have colours,
 we will keep it as a colour image and stick to the RGB values.
 
@@ -71,7 +72,7 @@ Now let's work out how to write everything to a PNG file.
 
 # Header
 
-First of all, a PNG file begins with a header. Let's define it as a constant:
+A PNG file begins with a header. Let's define it as a constant:
 
 {{< highlight python >}}
 HEADER = b'\x89PNG\r\n\x1A\n'
@@ -122,7 +123,7 @@ def chunk(out: BinaryIO, chunk_type: bytes, data: bytes) -> None:
     out.write(struct.pack('>I', checksum))
 {{< /highlight >}}
 
-Note that the PNG format requires us to output integers as big endian, which is what we use `struct.pack` for.
+> __Note:__ The PNG format requires us to output integers as big endian, which is what we use `struct.pack` for.
 More specifically `'>I'` indicates a [4-byte big endian unsigned integer][pack format].
 
 # The Image Header Chunk (IHDR)
@@ -145,7 +146,7 @@ def make_ihdr(width: int, height: int, bit_depth: int, color_type: int) -> bytes
     return struct.pack('>2I5B', width, height, bit_depth, color_type, 0, 0, 0)
 {{< /highlight >}}
 
-Here we use `struct.pack` to pack the data into a byte string (namely as per the IHDR spec, we write 2 unsigned integers and 5 bytes).
+Here we use `struct.pack` to pack the data into a byte string (namely as per [the IHDR spec,][ihdr spec] we write 2 unsigned integers and 5 bytes).
 
 # The Data Chunk (IDAT)
 
@@ -175,7 +176,7 @@ def encode_data(img: Image) -> List[int]:
     return ret
 {{< /highlight >}}
 
-A more sophisticated implementation could perform different filtering for every scanline, based on the contents of the scanline.
+> __Note:__ A more sophisticated implementation could perform different filtering for every scanline, based on the contents of the scanline.
 This is why every row starts with its own filter type.
 
 The PNG format also requires us to compress the data using the zlib compression method. Here we will again use the Python
@@ -196,7 +197,7 @@ def make_idat(image: Image) -> bytes:
     return compressed_data
 {{< /highlight >}}
 
-Note that PNG files can have multiple IDAT chunks, but for demonstration purposes we will only write one.
+> __Note:__ PNG files can have multiple IDAT chunks, but for demonstration purposes we will only write one.
 
 # PNG Output
 
@@ -215,7 +216,7 @@ In our case, each value in an RGB triple is represented by 1 byte (0-255), so th
 An image defined by RGB triples with no alpha channel has [colour type 2.][colour types]
 
 {{< highlight python >}}
-    assert len(image) > 0
+    assert len(image) > 0  # assume we were not given empty image data
     width = len(image[0])
     height = len(image)
     bit_depth = 8  # bits per pixel
@@ -267,3 +268,4 @@ Here is our PNG image:
 [crc32]: https://docs.python.org/3/library/zlib.html#zlib.crc32
 [pack format]: https://docs.python.org/3/library/struct.html#struct.pack
 [colour types]: https://www.w3.org/TR/2003/REC-PNG-20031110/#6Colour-values
+[ihdr spec]: https://www.w3.org/TR/2003/REC-PNG-20031110/#11IHDR
