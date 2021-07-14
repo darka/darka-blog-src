@@ -1,9 +1,9 @@
 ---
-title: "Generating a PNG file in Python"
-description: "Creating a PNG image in Python from scratch"
+title: "Generating a PNG File in Python"
+description: "How to create a PNG image in Python from scratch"
 date: 2021-07-08T20:57:13+01:00
 draft: true
-summary: "Creating a PNG image in Python from scratch"
+summary: "How to create a PNG image in Python from scratch"
 tags: ["python"]
 ---
 
