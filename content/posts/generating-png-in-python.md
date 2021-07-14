@@ -16,8 +16,8 @@ but the standard Python library.
 
 # Image Representation
 
-Let's figure out what we want to visualise in our PNG image. As this is not a painting class, we will generate a simple checkerboard
-pattern and spend the rest of our time writing that to a PNG file.
+Let's figure out what we want to visualise in our PNG image. As this is not a painting class, we will only generate a simple
+checkerboard pattern and spend the rest of our time focusing on writing that to a PNG file.
 
 First of all, we need to decide how we represent a pixel. A common way to do this is to store the pixel as a sequence of 3 values,
 one for each of the RGB (red, green, blue) components. Let's define that as a Python type alias:
@@ -37,7 +37,8 @@ WHITE_PIXEL: Pixel = (255, 255, 255)
 We are representing the intensity of each colour as a value in the range of 0-255, which thankfully fits in one byte (3 bytes per pixel).
 
 Now that we have pixels, how do we represent the image? For simplicity's sake, we will use a list of pixel lists, where each pixel list is
-a row in the image. We will make an assumption that all pixel lists have the same length. Let's define the image as another type alias:
+a row in the image, and the number of pixel lists is the height of the image. We will make an assumption that all pixel lists have the same
+length (i.e. every row has the same width). Let's define the image as another type alias:
 
 {{< highlight python >}}
 Image = List[List[Pixel]]
@@ -66,27 +67,32 @@ Note: as the checkerboard pattern consists of just two colours, we don't need th
 saved some space, or as an indexed-colour image with a palette and saved even more space. However, as most images on the web have colours,
 we will keep it as a colour image and stick to the RGB values.
 
+Now let's work out how to write everything to a PNG file.
+
 # Header
 
-Let's workout how to write everything to a PNG file. First of all, a PNG file needs a header:
+First of all, a PNG file begins with a header. Let's define it as a constant:
 
 {{< highlight python >}}
 HEADER = b'\x89PNG\r\n\x1A\n'
 {{< /highlight >}}
 
-The header is then followed by a number of chunks.
+We will later write it out to our file.
 
 # Chunks
 
-A chunk is a named data block that consists of:
+The header is followed by a number of chunks. A chunk is a named data block that consists of:
  * a 4-byte length field
  * a 4-byte chunk type field
  * the data
  * a 4-byte checksum
 
+The length field holds the size of the data field, and the chunk type is a special name defined in the PNG spec that represents
+what kind of data this chunk holds. Next comes the actual data, and finally a checksum.
+
 The checksum is created using the CRC algorithm from the chunk type and the data. The length field is not included in the checksum.
 
-First of all, let's write a function that returns the checksum:
+We will implement a function that writes out a data chunk to our PNG file, but first let's begin with a function that returns the checksum:
 
 {{< highlight python >}}
 import zlib
@@ -101,7 +107,7 @@ Fortunately we don't need to implement the CRC algorithm ourselves, as Python co
 [the `crc32` function][crc32] from the `zlib` library. We make two calls to `crc32` in order to compute a running checksum
 on two inputs, the chunk type and the data.
 
-We can now implement a function that can write any type of a PNG chunk to a file.
+We can now implement a function that can write any type of a PNG chunk to a file:
 
 {{< highlight python >}}
 import struct
@@ -117,11 +123,11 @@ def chunk(out: BinaryIO, chunk_type: bytes, data: bytes) -> None:
 {{< /highlight >}}
 
 Note that the PNG format requires us to output integers as big endian, which is what we use `struct.pack` for.
-More specifically `'>I'` are the format characters for a [4-byte big endian unsigned integer][pack format].
+More specifically `'>I'` indicates a [4-byte big endian unsigned integer][pack format].
 
-# The IHDR Chunk
+# The Image Header Chunk (IHDR)
 
-The first mandatory chunk we need to write is IHDR (the image header). It has the following format:
+The first mandatory chunk we need to write after the PNG header is IHDR (the image header). It has the following format:
 
  * 4-byte width
  * 4-byte height
@@ -131,25 +137,26 @@ The first mandatory chunk we need to write is IHDR (the image header). It has th
  * 1-byte filter method
  * 1-byte interlace method
 
-We can ignore the compression method, filter method and interlace method for now, and set them to 0.
-Let's define a function that generates the data for this chunk.
+For simplicity, we can ignore the compression method, filter method and interlace method, and set them to 0.
+As for the rest, let's define a function that generates the data for this chunk.
 
 {{< highlight python >}}
 def make_ihdr(width: int, height: int, bit_depth: int, color_type: int) -> bytes:
     return struct.pack('>2I5B', width, height, bit_depth, color_type, 0, 0, 0)
 {{< /highlight >}}
 
-Here we used `struct.pack` again to pack the data into a byte string.
+Here we used `struct.pack` again to pack the data into a byte string (namely as per the IHDR spec, we write 2 unsigned integers and 5 bytes).
 
-The width and the height are just the dimensions of the image. Bit depth refers to the number of bits used to represent each channel (not pixel).
-In our case, each value in an RGB triple is represented by 1 byte (0-255), so the bit depth is 8. Colour type describes the colour model of the image.
-An image defined by RGB triples with no alpha channel has [colour type 2.][colour types]
+# The Data Chunk (IDAT)
 
-# The Data Chunk
+After the image header comes the main data chunk. We'll write a function that coverts our image format to something we can output
+as part of this chunk.
 
-We decided to represent the pixel data as a list of pixel lists, where each pixel is an RGB triple. We now need to encode the data into scanlines.
-Every scanline begins with a filter type byte. We are not doing any fancy filtering here so we will use 0 as filter type.
-The function to encode the data will look like this:
+We are representing pixel data as a list of pixel lists, where each pixel itself is an RGB triple. We now need to encode this data into scanlines.
+A scanline is just a continuous row of bytes where every byte holds a colour value from our RGB triples. Every scanline begins with a filter type byte.
+We are not doing any fancy filtering here so we will use 0 as filter type.
+
+The function to encode the data will then look like this:
 
 {{< highlight python >}}
 def encode_data(img: Image) -> List[int]:
@@ -180,19 +187,33 @@ def compress_data(data: List[int]) -> bytes:
     return zlib.compress(data_bytes)
 {{< /highlight >}}
 
-With these two functions we can generate the data field for the IDAT data chunk. Note that PNG files can have multiple IDAT chunks,
-but for demonstration purposes we will only write one.
+With these two functions we can generate the data field for the IDAT data chunk:
+
+{{< highlight python >}}
+def make_idat(image: Image) -> bytes:
+    encoded_data = encode_data(image)
+    compressed_data = compress_data(encoded_data)
+    return compressed_data
+{{< /highlight >}}
+
+Note that PNG files can have multiple IDAT chunks, but for demonstration purposes we will only write one.
 
 # Writing the PNG
 
-Let's put this all together and write a function to output the whole PNG image:
+Let's put all of this together and write a function to output the whole PNG image.
+We will start out by outputting the PNG header:
 
 {{< highlight python >}}
 def dump_png(out: BinaryIO, image: Image) -> None:
     out.write(HEADER)  # start by writing the header
 {{< /highlight >}}
 
-Let's consolidate all we need for the IHDR chunk and write that out:
+Now let's consolidate all we need for the Image Header IHDR chunk.
+
+The width and the height are just the dimensions of the image. Bit depth refers to the number of bits used to represent each channel (not pixel).
+In our case, each value in an RGB triple is represented by 1 byte (0-255), so the bit depth will be 8. Colour type describes the colour model of the image.
+An image defined by RGB triples with no alpha channel has [colour type 2.][colour types]
+
 {{< highlight python >}}
     assert len(image) > 0
     width = len(image[0])
@@ -204,20 +225,21 @@ Let's consolidate all we need for the IHDR chunk and write that out:
     chunk(out, b'IHDR', ihdr_data)
 {{< /highlight >}}
 
-Now let's output the data chunk:
+Now let's output the data IDAT chunk:
 
 {{< highlight python >}}
-    encoded_data = encode_data(image)
-    compressed_data = compress_data(encoded_data)
+    compressed_data = make_idat(image)
     chunk(out, b'IDAT', data=compressed_data)
 {{< /highlight >}}
 
-There is also the IEND chunk that marks the end of the PNG image. It contains no data.
+Finally, the PNG format requires us to output an IEND chunk that marks the end of the PNG image.
+This chunk does not hold any data:
+
 {{< highlight python >}}
     chunk(out, b'IEND', data=b'')
 {{< /highlight >}}
 
-Finally, here is a function that actually opens a binary file and writes out the data:
+Let's write a function that actually opens a binary file and writes out the data:
 
 {{< highlight python >}}
 def save_png(image: Image, filename: str) -> None:
@@ -225,7 +247,20 @@ def save_png(image: Image, filename: str) -> None:
         dump_png(out, image)
 {{< /highlight >}}
 
-That concludes the demonstration. Here is our finished PNG image:
+To conclude the demonstration, let's generate the checkerboard pattern and call the function above to save
+it to a file:
+
+{{< highlight python >}}
+image = generate_checkerboard_pattern(WIDTH, HEIGHT)
+save_png(image, 'out.png')
+{{< /highlight >}}
+
+Here is our finished PNG image:
+
+# References
+
+* Portable Network Graphics (PNG) Specification: https://www.w3.org/TR/2003/REC-PNG-20031110/
+* PyPNG: https://pypng.readthedocs.io/en/latest/
 
 [crc32]: https://docs.python.org/3/library/zlib.html#zlib.crc32
 [pack format]: https://docs.python.org/3/library/struct.html#struct.pack
