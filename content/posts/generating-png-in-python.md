@@ -90,9 +90,9 @@ The header is followed by a number of chunks. A chunk is a named data block that
 The length field holds the size of the data field, and the chunk type is a special name defined in the PNG spec that represents
 what kind of data this chunk holds. Next comes the actual data, and finally a checksum.
 
-The checksum is created using the CRC algorithm from the chunk type and the data. The length field is not included in the checksum.
+The checksum is computed from the chunk type and the data using the CRC algorithm. The length field is not included in the checksum.
 
-We will implement a function that writes out a data chunk to our PNG file, but first let's begin with a function that returns the checksum:
+We will implement a function that writes out a data chunk, but first let's begin with a function that returns the checksum:
 
 {{< highlight python >}}
 import zlib
@@ -105,7 +105,7 @@ def get_checksum(chunk_type: bytes, data: bytes) -> int:
 
 Fortunately we don't need to implement the CRC algorithm ourselves, as Python conveniently exposes it via
 [the `crc32` function][crc32] from the `zlib` library. We make two calls to `crc32` in order to compute a running checksum
-on two inputs, the chunk type and the data.
+on two inputs: the chunk type and the data.
 
 We can now implement a function that can write any type of a PNG chunk to a file:
 
@@ -145,12 +145,12 @@ def make_ihdr(width: int, height: int, bit_depth: int, color_type: int) -> bytes
     return struct.pack('>2I5B', width, height, bit_depth, color_type, 0, 0, 0)
 {{< /highlight >}}
 
-Here we used `struct.pack` again to pack the data into a byte string (namely as per the IHDR spec, we write 2 unsigned integers and 5 bytes).
+Here we use `struct.pack` to pack the data into a byte string (namely as per the IHDR spec, we write 2 unsigned integers and 5 bytes).
 
 # The Data Chunk (IDAT)
 
 After the image header comes the main data chunk. We'll write a function that coverts our image format to something we can output
-as part of this chunk.
+as part of the chunk.
 
 We are representing pixel data as a list of pixel lists, where each pixel itself is an RGB triple. We now need to encode this data into scanlines.
 A scanline is just a continuous row of bytes where every byte holds a colour value from our RGB triples. Every scanline begins with a filter type byte.
@@ -225,7 +225,7 @@ An image defined by RGB triples with no alpha channel has [colour type 2.][colou
     chunk(out, b'IHDR', ihdr_data)
 {{< /highlight >}}
 
-Now let's output the data IDAT chunk:
+After IHDR comes the data IDAT chunk:
 
 {{< highlight python >}}
     compressed_data = make_idat(image)
@@ -255,7 +255,7 @@ image = generate_checkerboard_pattern(WIDTH, HEIGHT)
 save_png(image, 'out.png')
 {{< /highlight >}}
 
-Here is our finished PNG image:
+Here is our PNG image:
 
 ![Output image](/img/out.png)
 
