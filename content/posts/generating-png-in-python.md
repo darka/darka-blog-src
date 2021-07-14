@@ -26,7 +26,7 @@ one for each of the RGB (red, green, blue) components. Let's define that as a Py
 Pixel = Tuple[int, int, int]
 {{< /highlight >}}
 
-What kind of pixels do we want to store? As we will be generating a checkerboard pattern, we only need
+What pixels do we want to store? As we will be generating a checkerboard pattern, we only need
 black and white pixels. Let's go ahead and define them as constants:
 
 {{< highlight python >}}
