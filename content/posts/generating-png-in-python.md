@@ -124,7 +124,7 @@ def chunk(out: BinaryIO, chunk_type: bytes, data: bytes) -> None:
 {{< /highlight >}}
 
 > __Note:__ The PNG format requires us to output integers as big endian, which is what we use `struct.pack` for.
-More specifically `'>I'` indicates a [4-byte big endian unsigned integer][pack format].
+More specifically `'>I'` indicates a [4-byte big endian unsigned integer.][pack format]
 
 # The Image Header Chunk (IHDR)
 
