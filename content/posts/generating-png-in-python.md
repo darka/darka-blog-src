@@ -24,6 +24,8 @@ First of all, we need to decide how we represent a pixel. A common way to do thi
 one for each of the RGB (red, green, blue) components. Let's define that as a Python type alias:
 
 {{< highlight python >}}
+from typing import Tuple
+
 Pixel = Tuple[int, int, int]
 {{< /highlight >}}
 
@@ -42,6 +44,8 @@ a row in the image, and the number of pixel lists is the height of the image. We
 length (i.e. every row has the same width). Let's define the image as another type alias:
 
 {{< highlight python >}}
+from typing import List
+
 Image = List[List[Pixel]]
 {{< /highlight >}}
 
@@ -191,8 +195,8 @@ def compress_data(data: List[int]) -> bytes:
 With these two functions we can generate the data field for the IDAT data chunk:
 
 {{< highlight python >}}
-def make_idat(image: Image) -> bytes:
-    encoded_data = encode_data(image)
+def make_idat(img: Image) -> bytes:
+    encoded_data = encode_data(img)
     compressed_data = compress_data(encoded_data)
     return compressed_data
 {{< /highlight >}}
@@ -205,7 +209,7 @@ Let's put all of this together and write a function to output the whole PNG imag
 We will start out by outputting the PNG header:
 
 {{< highlight python >}}
-def dump_png(out: BinaryIO, image: Image) -> None:
+def dump_png(out: BinaryIO, img: Image) -> None:
     out.write(HEADER)  # start by writing the header
 {{< /highlight >}}
 
@@ -216,9 +220,9 @@ In our case, each value in an RGB triple is represented by 1 byte (0-255), so th
 An image defined by RGB triples with no alpha channel has [colour type 2.][colour types]
 
 {{< highlight python >}}
-    assert len(image) > 0  # assume we were not given empty image data
-    width = len(image[0])
-    height = len(image)
+    assert len(img) > 0  # assume we were not given empty image data
+    width = len(img[0])
+    height = len(img)
     bit_depth = 8  # bits per pixel
     color_type = 2  # pixel is RGB triple
 
@@ -229,7 +233,7 @@ An image defined by RGB triples with no alpha channel has [colour type 2.][colou
 After IHDR comes the data IDAT chunk:
 
 {{< highlight python >}}
-    compressed_data = make_idat(image)
+    compressed_data = make_idat(img)
     chunk(out, b'IDAT', data=compressed_data)
 {{< /highlight >}}
 
@@ -243,17 +247,20 @@ This chunk does not hold any data:
 Let's write a function that actually opens a binary file and writes out the data:
 
 {{< highlight python >}}
-def save_png(image: Image, filename: str) -> None:
+def save_png(img: Image, filename: str) -> None:
     with open(filename, 'wb') as out:
-        dump_png(out, image)
+        dump_png(out, img)
 {{< /highlight >}}
 
 To conclude the demonstration, let's generate the checkerboard pattern and call the function above to save
 it to a file:
 
 {{< highlight python >}}
-image = generate_checkerboard_pattern(WIDTH, HEIGHT)
-save_png(image, 'out.png')
+width = 100
+height = 100
+
+img = generate_checkerboard_pattern(width, height)
+save_png(img, 'out.png')
 {{< /highlight >}}
 
 Here is our PNG image:
