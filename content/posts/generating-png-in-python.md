@@ -267,6 +267,8 @@ Here is our PNG image:
 
 ![Output image](/img/out.png)
 
+Code is available [here.][code]
+
 # References
 
 * Portable Network Graphics (PNG) Specification: https://www.w3.org/TR/2003/REC-PNG-20031110/
@@ -276,3 +278,4 @@ Here is our PNG image:
 [pack format]: https://docs.python.org/3/library/struct.html#struct.pack
 [colour types]: https://www.w3.org/TR/2003/REC-PNG-20031110/#6Colour-values
 [ihdr spec]: https://www.w3.org/TR/2003/REC-PNG-20031110/#11IHDR
+[code]: https://gist.github.com/darka/061cfac5e95b80b078b769eaae7adf84
